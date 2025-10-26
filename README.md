@@ -1,12 +1,12 @@
 # YouTube Transcriber avec Whisper
 
-Un programme Python avec interface graphique pour transcrire automatiquement des vidéos YouTube en utilisant OpenAI Whisper. Optimisé pour GPU NVIDIA (RTX 3090).
+Un programme Python avec interface graphique pour transcrire automatiquement des vidéos YouTube en utilisant OpenAI Whisper. Optimisé pour GPU NVIDIA (RTX 3090) et Apple Silicon (M1/M2/M3).
 
 ## 🚀 Fonctionnalités
 
 - **Interface graphique intuitive** avec Tkinter
 - **Transcription haute qualité** avec Whisper large-v3
-- **Support GPU CUDA** pour une transcription rapide
+- **Support GPU** : CUDA (NVIDIA) et MPS (Apple M1/M2/M3)
 - **Traitement en batch** de plusieurs vidéos
 - **Détection automatique de la langue** (français/anglais)
 - **Logs détaillés** avec barre de progression
@@ -17,8 +17,8 @@ Un programme Python avec interface graphique pour transcrire automatiquement des
 
 - Python 3.8+
 - FFmpeg installé sur le système
-- GPU NVIDIA avec CUDA (recommandé) ou CPU
-- 8GB+ de RAM (16GB+ recommandé pour le modèle large)
+- GPU NVIDIA avec CUDA, Apple Silicon (M1/M2/M3), ou CPU
+- 8GB+ de RAM (16GB+ recommandé pour le modèle large, 32GB optimal pour M1)
 - ~10GB d'espace disque pour le modèle Whisper large-v3
 
 ## 🔧 Installation
@@ -59,7 +59,9 @@ venv\Scripts\activate
 source venv/bin/activate
 ```
 
-### 4. Installer PyTorch avec CUDA (pour RTX 3090)
+### 4. Installer PyTorch
+
+**Pour GPU NVIDIA (CUDA):**
 
 ```bash
 # Pour CUDA 11.8
@@ -68,6 +70,17 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 # Pour CUDA 12.1 (plus récent)
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 ```
+
+**Pour MacBook M1/M2/M3 (Apple Silicon):**
+
+```bash
+# Installation standard - détecte automatiquement Apple Silicon
+pip install torch torchvision torchaudio
+```
+
+> **Note importante:** Le programme détecte automatiquement le meilleur device disponible (CUDA, MPS ou CPU). Aucune modification du code n'est nécessaire!
+
+> **Note pour M1 avec 32GB RAM:** Vous pouvez utiliser tous les modèles, y compris large-v3, avec d'excellentes performances grâce à l'accélération GPU MPS (Metal Performance Shaders).
 
 ### 5. Installer les autres dépendances
 
@@ -108,11 +121,18 @@ Les fichiers de transcription incluent :
 
 ## ⚡ Optimisation des performances
 
-### Avec RTX 3090 (configuration actuelle)
+### Avec RTX 3090 (GPU NVIDIA)
 
 - **Modèle large-v3** : ~2-3x plus rapide que le temps réel
 - Une vidéo de 10 minutes est transcrite en 3-4 minutes
 - Utilisation de FP16 pour accélérer les calculs
+
+### Avec MacBook M1 Pro/Max (32GB RAM)
+
+- **Modèle large-v3** : ~2-4x plus rapide que le temps réel
+- Une vidéo de 10 minutes est transcrite en 3-5 minutes
+- Accélération GPU via Metal Performance Shaders (MPS)
+- 32GB de RAM permet d'utiliser confortablement tous les modèles
 
 ### Choix du modèle selon votre matériel
 
@@ -128,15 +148,17 @@ Pour changer le modèle, modifiez la ligne dans `main.py` :
 ```python
 self.transcriber = YouTubeTranscriber(
     output_dir=self.output_dir,
-    model_size='large-v3',  # Changer ici
-    device='cuda',
+    model_size='large-v3',      # Changer ici : tiny, base, small, medium, large-v3
+    device=get_best_device(),   # Auto-détection (cuda/mps/cpu)
     message_queue=self.message_queue
 )
 ```
 
+> **Note:** Le device est détecté automatiquement. Si vous voulez forcer un device spécifique, remplacez `get_best_device()` par `'cuda'`, `'mps'`, ou `'cpu'`.
+
 ## 🐛 Résolution des problèmes
 
-### "CUDA non disponible"
+### "CUDA non disponible" (GPU NVIDIA)
 
 Vérifiez votre installation CUDA :
 ```python
@@ -144,6 +166,18 @@ python -c "import torch; print(torch.cuda.is_available())"
 ```
 
 Si False, réinstallez PyTorch avec la bonne version CUDA.
+
+### "MPS non disponible" (MacBook M1/M2/M3)
+
+Vérifiez que MPS est activé :
+```python
+python -c "import torch; print(f'MPS disponible: {torch.backends.mps.is_available()}')"
+```
+
+Si False, vérifiez :
+- Vous utilisez macOS 12.3+ (requis pour MPS)
+- PyTorch est bien installé (version 1.12+)
+- En cas de problème, utilisez `device='cpu'` dans main.py
 
 ### "ffmpeg not found"
 
@@ -212,7 +246,8 @@ youtube-transcriber/
 Pour toute question ou problème, vérifiez d'abord que :
 1. FFmpeg est correctement installé
 2. Vous avez assez d'espace disque
-3. Votre GPU est reconnu (si utilisation CUDA)
-4. Les URLs YouTube sont valides et publiques
+3. Votre GPU est reconnu (CUDA pour NVIDIA, MPS pour Apple Silicon)
+4. Le paramètre `device` dans main.py correspond à votre configuration
+5. Les URLs YouTube sont valides et publiques
 
 Bon transcribing! 🎉

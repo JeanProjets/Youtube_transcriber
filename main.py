@@ -5,7 +5,17 @@ from pathlib import Path
 import queue
 import sys
 from datetime import datetime
+import torch
 from transcriber import YouTubeTranscriber
+
+def get_best_device():
+    """Détecte automatiquement le meilleur device disponible"""
+    if torch.cuda.is_available():
+        return 'cuda'
+    elif torch.backends.mps.is_available():
+        return 'mps'
+    else:
+        return 'cpu'
 
 class TranscriberGUI:
     def __init__(self, root):
@@ -181,7 +191,7 @@ class TranscriberGUI:
             self.transcriber = YouTubeTranscriber(
                 output_dir=self.output_dir,
                 model_size='large-v3',
-                device='cuda',
+                device=get_best_device(),  # Auto-détection: cuda (NVIDIA) / mps (M1) / cpu
                 message_queue=self.message_queue
             )
             

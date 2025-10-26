@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Python YouTube transcription tool that uses OpenAI Whisper for high-quality video transcription. The application provides a Tkinter GUI for batch processing YouTube videos with GPU acceleration support (NVIDIA CUDA).
+This is a Python YouTube transcription tool that uses OpenAI Whisper for high-quality video transcription. The application provides a Tkinter GUI for batch processing YouTube videos with GPU acceleration support (NVIDIA CUDA, Apple Silicon MPS). The code automatically detects the best available device (cuda/mps/cpu) for cross-platform compatibility.
 
 ## Key Architecture
 
@@ -15,6 +15,7 @@ This is a Python YouTube transcription tool that uses OpenAI Whisper for high-qu
   - Manages progress tracking and logging display
   - Uses queue-based communication between GUI and transcription threads
   - Features dual progress bars (global and detailed)
+  - Auto-detects best available device (CUDA/MPS/CPU) via `get_best_device()` function
 
 - **transcriber.py** - Core transcription logic
   - `YouTubeTranscriber` class handles the complete pipeline
@@ -43,14 +44,21 @@ venv\Scripts\activate     # Windows
 pip install -r youtube_transcriber_requirements.txt
 ```
 
-### GPU Setup (CUDA)
-For NVIDIA GPU acceleration, install PyTorch with CUDA:
+### GPU Setup
+
+**For NVIDIA GPU (CUDA):**
 ```bash
 # For CUDA 11.8
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 
 # For CUDA 12.1
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+```
+
+**For Apple Silicon (M1/M2/M3):**
+```bash
+# Standard installation auto-detects Apple Silicon
+pip install torch torchvision torchaudio
 ```
 
 ### FFmpeg Requirement
@@ -75,9 +83,12 @@ Models can be changed in main.py line 155:
 - `large-v3` - ~10GB VRAM, highest quality (default)
 
 ### Device Selection
-Change device in main.py line 156:
-- `'cuda'` - Use GPU acceleration (default)
-- `'cpu'` - Force CPU usage (slower but works without GPU)
+Device is **automatically detected** via `get_best_device()` function in main.py:
+- `'cuda'` - NVIDIA GPU with CUDA (auto-selected if available)
+- `'mps'` - Apple Silicon GPU with Metal Performance Shaders (auto-selected on M1/M2/M3)
+- `'cpu'` - CPU fallback (auto-selected if no GPU available)
+
+To force a specific device, replace `get_best_device()` with the device string in main.py line ~194.
 
 ## Output Format
 
@@ -89,7 +100,9 @@ Transcriptions are saved in `transcriptions/` directory with format:
 ## Development Notes
 
 - No formal testing framework - this is a standalone utility
-- No build process - Python script execution only  
+- No build process - Python script execution only
+- **Cross-platform compatible**: Works on Linux (CUDA), macOS (MPS), and Windows (CUDA/CPU)
+- Device auto-detection ensures code works without modification across platforms
 - GUI uses queue-based threading to prevent UI blocking
 - Extensive error handling for network failures and invalid URLs
 - Automatic temporary file cleanup prevents disk space issues
