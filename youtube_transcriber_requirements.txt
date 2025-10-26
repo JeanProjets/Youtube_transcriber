@@ -1,0 +1,18 @@
+# Core dependencies
+openai-whisper==20231117
+yt-dlp>=2024.1.0
+torch>=2.0.0
+ffmpeg-python==0.2.0
+
+# Pour l'interface (déjà inclus avec Python, mais au cas où)
+# tkinter est inclus dans Python standard
+
+# Notes d'installation:
+# 1. Pour utiliser CUDA (GPU NVIDIA), installer PyTorch avec CUDA:
+#    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+#    (ou cu121 pour CUDA 12.1)
+#
+# 2. FFmpeg doit être installé séparément:
+#    - Windows: télécharger depuis https://ffmpeg.org/download.html
+#    - Linux: sudo apt install ffmpeg
+#    - Mac: brew install ffmpeg
